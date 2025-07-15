@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  avg_score: 1.5
+  median_score: 1.5
+  std_dev: 1.5
+  total_comments: 1
+  approved_comments: 1
+  total_users: 1
+
+two:
+  avg_score: 1.5
+  median_score: 1.5
+  std_dev: 1.5
+  total_comments: 1
+  approved_comments: 1
+  total_users: 1

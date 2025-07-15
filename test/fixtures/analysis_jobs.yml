@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  job_type: MyString
+  status: MyString
+  total_items: 1
+  processed_items: 1
+  progress_percentage: 1.5
+  started_at: 2025-07-15 17:10:22
+  completed_at: 2025-07-15 17:10:22
+  error_message: MyText
+  metadata: 
+
+two:
+  job_type: MyString
+  status: MyString
+  total_items: 1
+  processed_items: 1
+  progress_percentage: 1.5
+  started_at: 2025-07-15 17:10:22
+  completed_at: 2025-07-15 17:10:22
+  error_message: MyText
+  metadata: 

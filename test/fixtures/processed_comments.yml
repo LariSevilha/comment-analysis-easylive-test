@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  comment: one
+  original_text: MyText
+  translated_text: MyText
+  status: MyString
+  approved: false
+
+two:
+  comment: two
+  original_text: MyText
+  translated_text: MyText
+  status: MyString
+  approved: false
