@@ -5,6 +5,5 @@ class Post < ApplicationRecord
   validates :title, presence: true
   validates :body, presence: true
   validates :external_id, presence: true, uniqueness: true
-  
-  counter_cache :comments_count
+   
 end

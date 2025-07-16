@@ -11,8 +11,7 @@ gem 'aasm'
 gem 'httparty' 
 gem 'descriptive_statistics' 
 gem 'rack-cors'
-gem 'rails-i18n'
-
+gem 'rails-i18n' 
 
 gem "bootsnap", require: false
 

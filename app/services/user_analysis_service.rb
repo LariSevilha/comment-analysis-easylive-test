@@ -1,10 +1,16 @@
 class UserAnalysisService
   def initialize(username)
-    @username = username
+    @username = username&.to_s  
   end
 
   def analyze!
     Rails.logger.info "Creating AnalysisJob for username: #{@username}"
+
+    unless @username.present?
+      Rails.logger.error "Invalid username: #{@username.inspect}"
+      raise ArgumentError, "Username cannot be blank"
+    end
+
     job = AnalysisJob.create!(
       job_type: 'user_analysis',
       metadata: { username: @username },
@@ -13,11 +19,13 @@ class UserAnalysisService
       processed_items: 0,
       progress_percentage: 0.0
     )
-    Rails.logger.info "AnalysisJob created with ID: #{job.id}, metadata: #{job.metadata.inspect}"
+
+    Rails.logger.info "Enqueuing UserAnalysisJob with job_id: #{job.id}, username: #{@username}"
     UserAnalysisJob.perform_later(job.id, @username)
+
     job
   rescue StandardError => e
-    Rails.logger.error "Failed to create AnalysisJob for #{@username}: #{e.message}"
+    Rails.logger.error "Failed to create AnalysisJob for #{@username}: #{e.message}\n#{e.backtrace.join("\n")}"
     raise
   end
 
@@ -33,6 +41,7 @@ class UserAnalysisService
     )
 
     posts_data = JsonPlaceholderService.fetch_posts_by_user_id(user_data['id'])
+    total_comments = 0
 
     posts_data.each do |post_data|
       post = user.posts.find_or_initialize_by(external_id: post_data['id'])
@@ -42,6 +51,7 @@ class UserAnalysisService
       )
 
       comments_data = JsonPlaceholderService.fetch_comments_by_post_id(post_data['id'])
+      total_comments += comments_data.count
 
       comments_data.each do |comment_data|
         comment = post.comments.find_or_initialize_by(external_id: comment_data['id'])
@@ -54,6 +64,6 @@ class UserAnalysisService
       end
     end
 
-    user
+    [user, total_comments]
   end
 end

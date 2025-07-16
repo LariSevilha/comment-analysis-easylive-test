@@ -16,46 +16,46 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_15_210519) do
 
   create_table "analysis_jobs", force: :cascade do |t|
     t.string "job_type", null: false
-    t.integer "status"
-    t.json "metadata", default: {}
+    t.string "status", default: "pending", null: false
+    t.jsonb "metadata", default: {}
     t.integer "total_items", default: 0
     t.integer "processed_items", default: 0
+    t.float "progress_percentage", default: 0.0
     t.datetime "started_at"
     t.datetime "completed_at"
     t.text "error_message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["job_type"], name: "index_analysis_jobs_on_job_type"
+    t.index ["metadata"], name: "index_analysis_jobs_on_metadata", using: :gin
     t.index ["status"], name: "index_analysis_jobs_on_status"
   end
 
   create_table "comments", force: :cascade do |t|
     t.bigint "post_id", null: false
+    t.bigint "user_id", null: false
     t.string "name"
     t.string "email"
     t.text "body", null: false
     t.text "translated_body"
     t.integer "external_id", null: false
-    t.integer "status"
+    t.string "status", default: "pending"
     t.datetime "processed"
     t.integer "keyword_matches_count", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_comments_on_external_id", unique: true
+    t.index ["keyword_matches_count"], name: "index_comments_on_keyword_matches_count"
     t.index ["post_id"], name: "index_comments_on_post_id"
     t.index ["processed"], name: "index_comments_on_processed"
     t.index ["status"], name: "index_comments_on_status"
+    t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
   create_table "group_metrics", force: :cascade do |t|
-    t.string "metric_type", null: false
-    t.decimal "value", precision: 10, scale: 4, null: false
-    t.integer "sample_size", default: 0
-    t.text "metadata"
+    t.jsonb "data", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["created_at"], name: "index_group_metrics_on_created_at"
-    t.index ["metric_type"], name: "index_group_metrics_on_metric_type"
   end
 
   create_table "keywords", force: :cascade do |t|
@@ -99,12 +99,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_15_210519) do
   create_table "user_metrics", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "metric_type", null: false
-    t.decimal "value", precision: 10, scale: 4, null: false
-    t.text "metadata"
+    t.float "value", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["metric_type"], name: "index_user_metrics_on_metric_type"
-    t.index ["user_id", "metric_type"], name: "index_user_metrics_on_user_id_and_metric_type"
     t.index ["user_id"], name: "index_user_metrics_on_user_id"
   end
 
@@ -120,15 +117,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_15_210519) do
     t.datetime "processed"
     t.integer "approved_comments_count", default: 0
     t.integer "rejected_comments_count", default: 0
-    t.integer "total_comments_count", default: 0
+    t.integer "comments_count", default: 0
+    t.jsonb "analysis_metrics", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["analysis_metrics"], name: "index_users_on_analysis_metrics", using: :gin
     t.index ["external_id"], name: "index_users_on_external_id", unique: true
     t.index ["processed"], name: "index_users_on_processed"
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   add_foreign_key "comments", "posts"
+  add_foreign_key "comments", "users"
   add_foreign_key "posts", "users"
   add_foreign_key "user_metrics", "users"
 end

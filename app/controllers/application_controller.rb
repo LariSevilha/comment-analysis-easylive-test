@@ -1,16 +1,14 @@
-class ApplicationController < ActionController::Base
-  protect_from_forgery with: :null_session
-  
-  rescue_from ActiveRecord::RecordNotFound, with: :not_found
-  rescue_from ActionController::ParameterMissing, with: :bad_request
+class ApplicationController < ActionController::API
+  rescue_from StandardError, with: :handle_standard_error
   
   private
   
-  def not_found(exception)
-    render json: { error: 'Not found', message: exception.message }, status: :not_found
-  end
-  
-  def bad_request(exception)
-    render json: { error: 'Bad request', message: exception.message }, status: :bad_request
+  def handle_standard_error(exception)
+    Rails.logger.error "#{exception.class}: #{exception.message}\n#{exception.backtrace.join("\n")}"
+    
+    render json: {
+      error: 'Internal server error',
+      message: exception.message
+    }, status: :internal_server_error
   end
 end
