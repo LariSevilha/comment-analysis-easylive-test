@@ -47,9 +47,7 @@ class CommentProcessorService
   end
 
   def simulate_translation(text)
-    # Simple simulation - in production, integrate with a real translation service
-    # This is just to make the system work without external dependencies
-    common_translations = {
+     common_translations = {
       'hello' => 'olá',
       'world' => 'mundo',
       'good' => 'bom',

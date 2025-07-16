@@ -1,5 +1,4 @@
 class AnalysisJob < ApplicationRecord
-  # Define enum using Rails 8.0 syntax
   enum :status, {
     pending: 'pending',
     running: 'running',
