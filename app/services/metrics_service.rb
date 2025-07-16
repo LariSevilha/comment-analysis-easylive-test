@@ -1,84 +1,177 @@
 require 'descriptive_statistics'
 
 class MetricsService
-  def self.group_metrics
-    Rails.cache.fetch('group_metrics', expires_in: 1.hour) do
-      calculate_group_metrics
+  CACHE_TTL = 1.hour
+  USER_METRICS_CACHE_KEY = 'user_metrics'
+  GROUP_METRICS_CACHE_KEY = 'group_metrics'
+
+  def self.calculate_user_metrics(user_id)
+    new.calculate_user_metrics(user_id)
+  end
+
+  def self.calculate_group_metrics
+    new.calculate_group_metrics
+  end
+
+  def self.recalculate_all_metrics
+    new.recalculate_all_metrics
+  end
+
+  def calculate_user_metrics(user_id)
+    CacheManager.fetch(user_id.to_s, cache_type: :user_metrics) do
+      user = User.find(user_id)
+      comments = user.comments.includes(:post)
+
+      metrics_data = build_user_metrics_data(user, comments)
+      update_user_metrics_record(user, metrics_data)
+
+      metrics_data
     end
   end
 
-  def self.invalidate_cache
-    Rails.cache.delete('group_metrics')
-    Rails.cache.delete('active_keywords')
-    Rails.cache.write('group_metrics_last_updated', Time.current)
+  def calculate_group_metrics
+    CacheManager.fetch('all', cache_type: :group_metrics) do
+      all_comments = Comment.includes(post: :user)
+      all_users = User.includes(:comments)
+
+      metrics_data = build_group_metrics_data(all_comments, all_users)
+      update_group_metrics_record(metrics_data)
+
+      metrics_data
+    end
+  end
+
+  def recalculate_all_metrics
+    # Clear all metrics cache
+    clear_metrics_cache
+
+    # Recalculate metrics for all users
+    User.find_each do |user|
+      calculate_user_metrics(user.id)
+    end
+
+    # Recalculate group metrics
+    calculate_group_metrics
   end
 
   private
 
-  def self.calculate_group_metrics
-    users = User.analyzed
-    return {} if users.empty?
+  def build_user_metrics_data(user, comments)
+    approved_comments = comments.select { |c| c.status == 'approved' }
+    rejected_comments = comments.select { |c| c.status == 'rejected' }
+    processing_comments = comments.select { |c| c.status == 'processing' }
 
-    # Collect all approval rates
-    approval_rates = users.map(&:approval_rate).compact
-    
-    # Collect all keyword counts from processed comments
-    all_keyword_counts = Comment.processed.pluck(:keyword_matches_count).compact
-    
-    # Collect user-level metrics
-    user_metrics = users.map { |user| user.analysis_metrics }.compact
-    
-    total_comments = user_metrics.sum { |m| m['total_comments'] || 0 }
-    total_approved = user_metrics.sum { |m| m['approved_comments'] || 0 }
-    total_rejected = user_metrics.sum { |m| m['rejected_comments'] || 0 }
+    keyword_counts = comments.map { |c| c.keyword_count || 0 }
+    approved_keyword_counts = approved_comments.map { |c| c.keyword_count || 0 }
 
     {
-      total_users_analyzed: users.count,
-      total_comments_processed: total_comments,
-      total_approved_comments: total_approved,
-      total_rejected_comments: total_rejected,
-      overall_approval_rate: total_comments > 0 ? (total_approved.to_f / total_comments * 100).round(2) : 0.0,
-      
-      approval_rates_stats: calculate_stats(approval_rates),
-      keyword_counts_stats: calculate_stats(all_keyword_counts),
-      
-      distribution: {
-        users_by_approval_rate: {
-          high: users.count { |u| u.approval_rate >= 70 },
-          medium: users.count { |u| u.approval_rate >= 30 && u.approval_rate < 70 },
-          low: users.count { |u| u.approval_rate < 30 }
-        },
-        comments_by_keyword_count: {
-          high: all_keyword_counts.count { |c| c >= 3 },
-          medium: all_keyword_counts.count { |c| c >= 1 && c < 3 },
-          none: all_keyword_counts.count { |c| c == 0 }
-        }
-      },
-      
-      top_performers: users.order(approved_comments_count: :desc).limit(5).map do |user|
-        {
-          username: user.username,
-          approval_rate: user.approval_rate,
-          total_comments: user.comments_count,
-          approved_comments: user.approved_comments_count
-        }
-      end,
-      
-      generated_at: Time.current
+      user_id: user.id,
+      user_name: user.name,
+      total_comments: comments.count,
+      approved_comments: approved_comments.count,
+      rejected_comments: rejected_comments.count,
+      processing_comments: processing_comments.count,
+      avg_keyword_count: calculate_mean(keyword_counts),
+      median_keyword_count: calculate_median(keyword_counts),
+      std_dev_keyword_count: calculate_standard_deviation(keyword_counts),
+      avg_approved_keyword_count: calculate_mean(approved_keyword_counts),
+      median_approved_keyword_count: calculate_median(approved_keyword_counts),
+      std_dev_approved_keyword_count: calculate_standard_deviation(approved_keyword_counts),
+      approval_rate: calculate_approval_rate(approved_comments.count, comments.count),
+      rejection_rate: calculate_rejection_rate(rejected_comments.count, comments.count),
+      calculated_at: Time.current
     }
   end
 
-  def self.calculate_stats(values)
-    return { count: 0 } if values.empty?
+  def build_group_metrics_data(all_comments, all_users)
+    approved_comments = all_comments.select { |c| c.status == 'approved' }
+    rejected_comments = all_comments.select { |c| c.status == 'rejected' }
+    processing_comments = all_comments.select { |c| c.status == 'processing' }
+
+    keyword_counts = all_comments.map { |c| c.keyword_count || 0 }
+    approved_keyword_counts = approved_comments.map { |c| c.keyword_count || 0 }
+
+    users_with_comments = all_users.select { |u| u.comments.any? }
+    comments_per_user = users_with_comments.map { |u| u.comments.count }
 
     {
-      mean: values.mean.round(2),
-      median: values.median.round(2),
-      standard_deviation: values.standard_deviation.round(2),
-      variance: values.variance.round(2),
-      min: values.min || 0,
-      max: values.max || 0,
-      count: values.count
+      total_users: all_users.count,
+      users_with_comments: users_with_comments.count,
+      total_comments: all_comments.count,
+      approved_comments: approved_comments.count,
+      rejected_comments: rejected_comments.count,
+      processing_comments: processing_comments.count,
+      avg_keyword_count: calculate_mean(keyword_counts),
+      median_keyword_count: calculate_median(keyword_counts),
+      std_dev_keyword_count: calculate_standard_deviation(keyword_counts),
+      avg_approved_keyword_count: calculate_mean(approved_keyword_counts),
+      median_approved_keyword_count: calculate_median(approved_keyword_counts),
+      std_dev_approved_keyword_count: calculate_standard_deviation(approved_keyword_counts),
+      avg_comments_per_user: calculate_mean(comments_per_user),
+      median_comments_per_user: calculate_median(comments_per_user),
+      std_dev_comments_per_user: calculate_standard_deviation(comments_per_user),
+      approval_rate: calculate_approval_rate(approved_comments.count, all_comments.count),
+      rejection_rate: calculate_rejection_rate(rejected_comments.count, all_comments.count),
+      calculated_at: Time.current
     }
+  end
+
+  def update_user_metrics_record(user, metrics_data)
+    user_metrics = user.user_metrics || user.build_user_metrics
+
+    user_metrics.update!(
+      total_comments: metrics_data[:total_comments],
+      approved_comments: metrics_data[:approved_comments],
+      rejected_comments: metrics_data[:rejected_comments],
+      avg_keyword_count: metrics_data[:avg_keyword_count],
+      median_keyword_count: metrics_data[:median_keyword_count],
+      std_dev_keyword_count: metrics_data[:std_dev_keyword_count],
+      calculated_at: metrics_data[:calculated_at]
+    )
+  end
+
+  def update_group_metrics_record(metrics_data)
+    group_metrics = GroupMetrics.current
+
+    group_metrics.update!(
+      total_users: metrics_data[:total_users],
+      total_comments: metrics_data[:total_comments],
+      approved_comments: metrics_data[:approved_comments],
+      rejected_comments: metrics_data[:rejected_comments],
+      avg_keyword_count: metrics_data[:avg_keyword_count],
+      median_keyword_count: metrics_data[:median_keyword_count],
+      std_dev_keyword_count: metrics_data[:std_dev_keyword_count],
+      calculated_at: metrics_data[:calculated_at]
+    )
+  end
+
+  def calculate_mean(values)
+    return 0.0 if values.empty?
+    values.mean.round(2)
+  end
+
+  def calculate_median(values)
+    return 0.0 if values.empty?
+    values.median.round(2)
+  end
+
+  def calculate_standard_deviation(values)
+    return 0.0 if values.empty? || values.length < 2
+    values.standard_deviation.round(2)
+  end
+
+  def calculate_approval_rate(approved_count, total_count)
+    return 0.0 if total_count.zero?
+    (approved_count.to_f / total_count * 100).round(2)
+  end
+
+  def calculate_rejection_rate(rejected_count, total_count)
+    return 0.0 if total_count.zero?
+    (rejected_count.to_f / total_count * 100).round(2)
+  end
+
+  def clear_metrics_cache
+    # Use CacheManager's intelligent invalidation
+    CacheManager.invalidate_related_caches(:metrics_recalculation)
   end
 end

@@ -1,9 +1,9 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  username: MyString
+  name: "Test User One"
+  email: "user1@example.com"
   external_id: 1
 
 two:
-  username: MyString
-  external_id: 1
+  name: "Test User Two"
+  email: "user2@example.com"
+  external_id: 2

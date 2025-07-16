@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Setup script for development environment
+
+set -e
+
+echo "🚀 Setting up Comment Analysis Pipeline development environment..."
+
+# Check Ruby version
+echo "📋 Checking Ruby version..."
+if ! ruby -v | grep -q "ruby 3"; then
+  echo "❌ Ruby 3.0+ is required. Current version: $(ruby -v)"
+  exit 1
+fi
+echo "✅ Ruby version OK: $(ruby -v)"
+
+# Check if PostgreSQL is running
+echo "📋 Checking PostgreSQL..."
+if ! pg_isready -q; then
+  echo "❌ PostgreSQL is not running. Please start PostgreSQL service."
+  exit 1
+fi
+echo "✅ PostgreSQL is running"
+
+# Install dependencies
+echo "📦 Installing Ruby gems..."
+bundle install
+
+# Setup environment file
+if [ ! -f .env ]; then
+  echo "📝 Creating .env file..."
+  cp .env.example .env
+  echo "⚠️  Please edit .env file with your configuration"
+else
+  echo "✅ .env file already exists"
+fi
+
+# Setup database
+echo "🗄️  Setting up database..."
+bundle exec rails db:create
+bundle exec rails db:migrate
+bundle exec rails db:seed
+
+# Run tests to verify setup
+echo "🧪 Running tests to verify setup..."
+bundle exec rails test
+
+echo ""
+echo "🎉 Setup completed successfully!"
+echo ""
+echo "📋 Next steps:"
+echo "  1. Edit .env file with your API keys"
+echo "  2. Start the server: rails server"
+echo "  3. Start background jobs: bundle exec solid_queue:start"
+echo "  4. Visit http://localhost:3000 to test the API"
+echo ""
+echo "📚 Useful commands:"
+echo "  • rails console                    # Open Rails console"
+echo "  • rails test                       # Run tests"
+echo "  • rails db:seed                    # Load sample data"
+echo "  • bundle exec solid_queue:start    # Start background jobs"
+echo ""

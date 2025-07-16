@@ -1,0 +1,213 @@
+---
+http_interactions:
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/users?username=Bret
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:00 GMT
+        Content-Type:
+          - application/json; charset=utf-8
+        Content-Length:
+          - "509"
+        Connection:
+          - keep-alive
+        X-Powered-By:
+          - Express
+        X-Ratelimit-Limit:
+          - "1000"
+        X-Ratelimit-Remaining:
+          - "999"
+        X-Ratelimit-Reset:
+          - "1547546461"
+        Vary:
+          - Origin, Accept-Encoding
+        Access-Control-Allow-Credentials:
+          - "true"
+        Cache-Control:
+          - max-age=43200
+        Pragma:
+          - no-cache
+        Expires:
+          - "-1"
+        X-Content-Type-Options:
+          - nosniff
+        Etag:
+          - W/"1fd-+2Y3G3w049iSZtw5t1mzSnunngE"
+        Via:
+          - 1.1 vegur
+        Cf-Cache-Status:
+          - HIT
+        Age:
+          - "2547"
+        Cf-Ray:
+          - 4c62a4c6c9d6c045-SJC
+      body:
+        encoding: UTF-8
+        string: |
+          [
+            {
+              "id": 1,
+              "name": "Leanne Graham",
+              "username": "Bret",
+              "email": "Sincere@april.biz",
+              "address": {
+                "street": "Kulas Light",
+                "suite": "Apt. 556",
+                "city": "Gwenborough",
+                "zipcode": "92998-3874",
+                "geo": {
+                  "lat": "-37.3159",
+                  "lng": "81.1496"
+                }
+              },
+              "phone": "1-770-736-8031 x56442",
+              "website": "hildegard.org",
+              "company": {
+                "name": "Romaguera-Crona",
+                "catchPhrase": "Multi-layered client-server neural-net",
+                "bs": "harness real-time e-markets"
+              }
+            }
+          ]
+      recorded_at: Tue, 15 Jan 2025 10:00:00 GMT
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/users/1/posts
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:01 GMT
+        Content-Type:
+          - application/json; charset=utf-8
+        Content-Length:
+          - "1234"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: |
+          [
+            {
+              "userId": 1,
+              "id": 1,
+              "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+              "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+            },
+            {
+              "userId": 1,
+              "id": 2,
+              "title": "qui est esse",
+              "body": "est rerum tempore vitae\nsequi sint nihil reprehenderit dolor beatae ea dolores neque\nfugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis\nqui aperiam non debitis possimus qui neque nisi nulla"
+            }
+          ]
+      recorded_at: Tue, 15 Jan 2025 10:00:01 GMT
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/posts/1/comments
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:02 GMT
+        Content-Type:
+          - application/json; charset=utf-8
+        Content-Length:
+          - "1980"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: |
+          [
+            {
+              "postId": 1,
+              "id": 1,
+              "name": "id labore ex et quam laborum",
+              "email": "Eliseo@gardner.biz",
+              "body": "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
+            },
+            {
+              "postId": 1,
+              "id": 2,
+              "name": "quo vero reiciendis velit similique earum",
+              "email": "Jayne_Kuhic@sydney.com",
+              "body": "est natus enim nihil est dolore omnis voluptatem numquam\net omnis occaecati quod ullam at\nvoluptatem error expedita pariatur\nnihil sint nostrum voluptatem reiciendis et"
+            }
+          ]
+      recorded_at: Tue, 15 Jan 2025 10:00:02 GMT
+  - request:
+      method: post
+      uri: <LIBRETRANSLATE_URL>/translate
+      body:
+        encoding: UTF-8
+        string: '{"q":"laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium","source":"en","target":"pt","api_key":"<LIBRETRANSLATE_API_KEY>"}'
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+        Content-Type:
+          - application/json
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:03 GMT
+        Content-Type:
+          - application/json
+        Content-Length:
+          - "156"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: |
+          {
+            "translatedText": "elogio quase é o que é grande prazer deles\ntempo que necessidades\ndor que quase\nrejeitar e nome sábio acusação"
+          }
+      recorded_at: Tue, 15 Jan 2025 10:00:03 GMT
+recorded_with: VCR 6.3.1

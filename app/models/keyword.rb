@@ -1,18 +1,20 @@
 class Keyword < ApplicationRecord
-  validates :word, presence: true, uniqueness: true
-  validates :word, length: { minimum: 2 }
+  validates :word, presence: true, uniqueness: { case_sensitive: false }
 
-  scope :active, -> { where(active: true) }
+  before_save :normalize_word
 
-  after_create :invalidate_cache_and_reprocess
-  after_update :invalidate_cache_and_reprocess, if: :saved_change_to_active?
-  after_destroy :invalidate_cache_and_reprocess
+  after_save :trigger_recalculation
+  after_destroy :trigger_recalculation
 
   private
 
-  def invalidate_cache_and_reprocess
-    Rails.cache.delete('active_keywords')
-    MetricsService.invalidate_cache 
-    ReprocessAllCommentsJob.perform_later
+  def normalize_word
+    self.word = word.downcase.strip if word.present?
+  end
+
+  def trigger_recalculation
+    Rails.logger.info "Keyword #{word} changed, triggering metrics recalculation"
+    CacheManager.invalidate_related_caches(:keyword_change)
+    MetricsRecalculationJob.trigger_keyword_change_recalculation
   end
 end

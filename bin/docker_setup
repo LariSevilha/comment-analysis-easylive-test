@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Docker setup script for Comment Analysis Pipeline
+
+set -e
+
+echo "🐳 Setting up Comment Analysis Pipeline with Docker..."
+
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker is not installed. Please install Docker first."
+    exit 1
+fi
+
+# Check if Docker Compose is installed
+if ! command -v docker-compose &> /dev/null; then
+    echo "❌ Docker Compose is not installed. Please install Docker Compose first."
+    exit 1
+fi
+
+echo "✅ Docker and Docker Compose are available"
+
+# Create .env file if it doesn't exist
+if [ ! -f .env ]; then
+    echo "📝 Creating .env file from example..."
+    cp .env.example .env
+    echo "⚠️  Please edit .env file with your configuration before continuing"
+    echo "Press Enter when ready to continue..."
+    read
+fi
+
+# Build and start containers
+echo "🏗️  Building Docker containers..."
+docker-compose build
+
+echo "🚀 Starting containers..."
+docker-compose up -d
+
+# Wait for database to be ready
+echo "⏳ Waiting for database to be ready..."
+sleep 10
+
+# Setup database
+echo "🗄️  Setting up database..."
+docker-compose run app bin/rails solid_cache:install:migrations
+docker-compose run app bin/rails db:create
+docker-compose run app bin/rails runner "load Rails.root.join('db/queue_schema.rb')"
+docker-compose run app bin/rails db:migrate
+
+docker-compose exec app bin/rails db:seed
+
+echo ""
+echo "🎉 Docker setup completed successfully!"
+echo ""
+echo "📋 Container status:"
+docker-compose ps
+
+echo ""
+echo "📚 Useful Docker commands:"
+echo "  • docker-compose up -d                # Start containers in background"
+echo "  • docker-compose down                 # Stop containers"
+echo "  • docker-compose logs app             # View app logs"
+echo "  • docker-compose exec app bin/rails c # Open Rails console"
+echo "  • docker-compose exec app bin/rails test # Run tests"
+echo "  • docker-compose restart app          # Restart app container"
+echo ""
+echo "🌐 Application is running at: http://localhost:3000"
+echo "📊 Background jobs are running automatically in the container"
+echo ""

@@ -1,29 +1,50 @@
-keywords = [
-  { word: "excelente", active: true, description: "Palavra muito positiva" },
-  { word: "ótimo", active: true, description: "Palavra positiva" },
-  { word: "bom", active: true, description: "Palavra positiva" },
-  { word: "fantástico", active: true, description: "Palavra muito positiva" },
-  { word: "perfeito", active: true, description: "Palavra positiva" },
-  { word: "maravilhoso", active: true, description: "Palavra muito positiva" },
-  { word: "incrível", active: true, description: "Palavra positiva" },
-  { word: "amor", active: true, description: "Palavra positiva" },
-  { word: "feliz", active: true, description: "Palavra positiva" },
-  { word: "sucesso", active: true, description: "Palavra positiva" }
+# This file should ensure the existence of records required to run the application in every environment (production,
+# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
+# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
+
+puts "🌱 Seeding database..."
+
+# Default keywords for comment classification
+# These keywords are used to classify comments as approved (>= 2 keywords) or rejected (< 2 keywords)
+default_keywords = [
+  # Positive sentiment words
+  "bom", "boa", "excelente", "ótimo", "ótima", "perfeito", "perfeita",
+  "maravilhoso", "maravilhosa", "fantástico", "fantástica", "incrível",
+  "amor", "amei", "adorei", "gostei", "legal", "bacana", "show",
+
+  # Quality indicators
+  "qualidade", "profissional", "eficiente", "rápido", "rápida",
+  "confiável", "seguro", "segura", "recomendo", "recomendado",
+
+  # Engagement words
+  "interessante", "útil", "importante", "necessário", "necessária",
+  "valor", "benefício", "vantagem", "solução", "resultado",
+
+  # Positive actions
+  "funciona", "funcionou", "resolveu", "ajudou", "melhorou",
+  "facilitou", "otimizou", "economizou", "ganhou", "conquistou"
 ]
 
-keywords.each do |keyword_attrs|
-  Keyword.find_or_create_by(word: keyword_attrs[:word]) do |keyword|
-    keyword.active = keyword_attrs[:active]
-    keyword.description = keyword_attrs[:description]
+puts "Creating default keywords..."
+created_count = 0
+existing_count = 0
+
+default_keywords.each do |word|
+  keyword = Keyword.find_or_initialize_by(word: word.downcase.strip)
+  if keyword.new_record?
+    keyword.save!
+    created_count += 1
+    puts "  ✓ Created keyword: #{word}"
+  else
+    existing_count += 1
+    puts "  - Keyword already exists: #{word}"
   end
 end
 
-puts "#{keywords.count} keywords created!"
-
-sample_user = User.find_or_create_by(username: 'Bret') do |user|
-  user.name = 'Leanne Graham'
-  user.email = 'Sincere@april.biz'
-  user.external_id = 1 
-end
-
-puts "✅ Created sample user: #{sample_user.username}"
+puts "\n📊 Seeding completed!"
+puts "  • #{created_count} new keywords created"
+puts "  • #{existing_count} keywords already existed"
+puts "  • Total keywords in database: #{Keyword.count}"
+puts "\n🎯 Keywords are used for comment classification:"
+puts "  • Comments with >= 2 keywords → APPROVED"
+puts "  • Comments with < 2 keywords → REJECTED"

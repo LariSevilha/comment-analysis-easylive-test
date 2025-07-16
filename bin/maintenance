@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# Maintenance script for Comment Analysis Pipeline
+
+set -e
+
+show_help() {
+    echo "Comment Analysis Pipeline - Maintenance Script"
+    echo ""
+    echo "Usage: bin/maintenance <command>"
+    echo ""
+    echo "Available commands:"
+    echo "  cache:clear              Clear all cache entries"
+    echo "  cache:stats              Show cache statistics"
+    echo "  jobs:status              Show background jobs status"
+    echo "  jobs:clear               Clear finished jobs"
+    echo "  jobs:retry               Retry failed jobs"
+    echo "  db:reset                 Reset database (drop, create, migrate, seed)"
+    echo "  keywords:list            List all keywords"
+    echo "  keywords:add WORD        Add a new keyword"
+    echo "  metrics:recalculate      Recalculate all metrics"
+    echo "  analyze:user USERNAME    Analyze a specific user"
+    echo "  health:check             Run health checks"
+    echo "  logs:tail                Tail application logs"
+    echo ""
+}
+
+case "$1" in
+    "cache:clear")
+        echo "🧹 Clearing cache..."
+        rails runner "Rails.cache.clear"
+        echo "✅ Cache cleared"
+        ;;
+
+    "cache:stats")
+        echo "📊 Cache statistics:"
+        rails runner "
+        stats = Rails.cache.stats
+        puts \"Cache entries: #{stats[:entries] || 'N/A'}\"
+        puts \"Cache size: #{stats[:size] || 'N/A'}\"
+        puts \"Hit ratio: #{stats[:hit_ratio] || 'N/A'}\"
+        "
+        ;;
+
+    "jobs:status")
+        echo "📋 Background jobs status:"
+        rails runner "
+        require 'solid_queue'
+        puts \"Pending jobs: #{SolidQueue::Job.pending.count}\"
+        puts \"Running jobs: #{SolidQueue::Job.running.count}\"
+        puts \"Finished jobs: #{SolidQueue::Job.finished.count}\"
+        puts \"Failed jobs: #{SolidQueue::Job.failed.count}\"
+        "
+        ;;
+
+    "jobs:clear")
+        echo "🧹 Clearing finished jobs..."
+        rails runner "SolidQueue::Job.finished.delete_all"
+        echo "✅ Finished jobs cleared"
+        ;;
+
+    "jobs:retry")
+        echo "🔄 Retrying failed jobs..."
+        rails runner "SolidQueue::Job.failed.find_each(&:retry)"
+        echo "✅ Failed jobs queued for retry"
+        ;;
+
+    "db:reset")
+        echo "🗄️  Resetting database..."
+        rails db:drop db:create db:migrate db:seed
+        echo "✅ Database reset completed"
+        ;;
+
+    "keywords:list")
+        echo "📝 Current keywords:"
+        rails runner "puts Keyword.pluck(:word).sort.join(', ')"
+        ;;
+
+    "keywords:add")
+        if [ -z "$2" ]; then
+            echo "❌ Please provide a keyword to add"
+            echo "Usage: bin/maintenance keywords:add WORD"
+            exit 1
+        fi
+        echo "➕ Adding keyword: $2"
+        rails runner "
+        keyword = Keyword.create!(word: '$2')
+        puts \"✅ Keyword '#{keyword.word}' added successfully\"
+        "
+        ;;
+
+    "metrics:recalculate")
+        echo "📊 Recalculating all metrics..."
+        rails runner "MetricsRecalculationJob.perform_now"
+        echo "✅ Metrics recalculation completed"
+        ;;
+
+    "analyze:user")
+        if [ -z "$2" ]; then
+            echo "❌ Please provide a username to analyze"
+            echo "Usage: bin/maintenance analyze:user USERNAME"
+            exit 1
+        fi
+        echo "🔍 Analyzing user: $2"
+        rails runner "
+        service = CommentAnalysisService.new
+        result = service.analyze_user('$2')
+        puts \"✅ Analysis started with job ID: #{result[:job_id]}\"
+        "
+        ;;
+
+    "health:check")
+        echo "🏥 Running health checks..."
+        echo ""
+
+        # Check database connection
+        echo "📋 Database connection:"
+        if rails runner "ActiveRecord::Base.connection.execute('SELECT 1')" &> /dev/null; then
+            echo "  ✅ Database: Connected"
+        else
+            echo "  ❌ Database: Connection failed"
+        fi
+
+        # Check external APIs
+        echo "📋 External APIs:"
+        if curl -s --max-time 5 https://jsonplaceholder.typicode.com/users/1 > /dev/null; then
+            echo "  ✅ JSONPlaceholder API: Available"
+        else
+            echo "  ❌ JSONPlaceholder API: Unavailable"
+        fi
+
+        if curl -s --max-time 5 https://libretranslate.de/languages > /dev/null; then
+            echo "  ✅ LibreTranslate API: Available"
+        else
+            echo "  ⚠️  LibreTranslate API: Unavailable (check configuration)"
+        fi
+
+        # Check background jobs
+        echo "📋 Background jobs:"
+        rails runner "
+        if defined?(SolidQueue)
+          puts '  ✅ Solid Queue: Available'
+        else
+          puts '  ❌ Solid Queue: Not available'
+        end
+        "
+
+        echo ""
+        echo "✅ Health check completed"
+        ;;
+
+    "logs:tail")
+        echo "📜 Tailing application logs (Ctrl+C to stop)..."
+        tail -f log/development.log
+        ;;
+
+    *)
+        show_help
+        ;;
+esac

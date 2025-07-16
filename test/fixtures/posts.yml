@@ -1,13 +1,11 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
   user: one
-  title: MyString
-  body: MyText
+  title: "Test Post One"
+  body: "This is the body of test post one"
   external_id: 1
 
 two:
-  user: two
-  title: MyString
-  body: MyText
-  external_id: 1
+  user: one
+  title: "Test Post Two"
+  body: "This is the body of test post two"
+  external_id: 2

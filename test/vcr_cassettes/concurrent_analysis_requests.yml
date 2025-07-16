@@ -1,0 +1,93 @@
+---
+http_interactions:
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/users?username=user1
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:00 GMT
+        Content-Type:
+          - application/json; charset=utf-8
+        Content-Length:
+          - "2"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: "[]"
+      recorded_at: Tue, 15 Jan 2025 10:00:00 GMT
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/users?username=user2
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:01 GMT
+        Content-Type:
+          - application/json; charset=utf-8
+        Content-Length:
+          - "2"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: "[]"
+      recorded_at: Tue, 15 Jan 2025 10:00:01 GMT
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/users?username=user3
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:02 GMT
+        Content-Type:
+          - application/json; charset=utf-8
+        Content-Length:
+          - "2"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: "[]"
+      recorded_at: Tue, 15 Jan 2025 10:00:02 GMT
+recorded_with: VCR 6.3.1

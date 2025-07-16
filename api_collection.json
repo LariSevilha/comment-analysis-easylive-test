@@ -1,0 +1,639 @@
+{
+  "info": {
+    "name": "Comment Analysis Pipeline API",
+    "description": "Collection for testing the Comment Analysis Pipeline API endpoints",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Comment Analysis",
+      "item": [
+        {
+          "name": "Start Analysis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('job_id', response.job_id);",
+                  "    pm.test('Job ID is set', function () {",
+                  "        pm.expect(response.job_id).to.not.be.empty;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"Bret\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/comments/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comments", "analyze"]
+            },
+            "description": "Start comment analysis for a specific user"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"Bret\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/comments/analyze",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "analyze"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"status\": \"started\",\n  \"message\": \"Analysis started for user Bret\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Check Progress",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/comments/progress/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comments", "progress", "{{job_id}}"]
+            },
+            "description": "Check the progress of a running analysis job"
+          },
+          "response": [
+            {
+              "name": "Processing Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/comments/progress/550e8400-e29b-41d4-a716-446655440000",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "api",
+                    "comments",
+                    "progress",
+                    "550e8400-e29b-41d4-a716-446655440000"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"status\": \"processing\",\n  \"progress\": 75,\n  \"total\": 100,\n  \"current_step\": \"translating_comments\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/comments/metrics/Bret",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comments", "metrics", "Bret"]
+            },
+            "description": "Get statistical metrics for a specific user and group"
+          },
+          "response": [
+            {
+              "name": "Metrics Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/comments/metrics/Bret",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "metrics", "Bret"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user_metrics\": {\n    \"username\": \"Bret\",\n    \"total_comments\": 50,\n    \"approved_comments\": 32,\n    \"rejected_comments\": 18,\n    \"approval_rate\": 64.0,\n    \"statistics\": {\n      \"mean\": 2.4,\n      \"median\": 2.0,\n      \"standard_deviation\": 1.2\n    }\n  },\n  \"group_metrics\": {\n    \"total_users\": 5,\n    \"total_comments\": 250,\n    \"approved_comments\": 160,\n    \"rejected_comments\": 90,\n    \"approval_rate\": 64.0,\n    \"statistics\": {\n      \"mean\": 2.1,\n      \"median\": 2.0,\n      \"standard_deviation\": 1.4\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Keywords Management",
+      "item": [
+        {
+          "name": "List Keywords",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/keywords",
+              "host": ["{{base_url}}"],
+              "path": ["api", "keywords"]
+            },
+            "description": "Get all keywords used for comment classification"
+          },
+          "response": [
+            {
+              "name": "Keywords List",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/keywords",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "keywords"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"keywords\": [\n    {\n      \"id\": 1,\n      \"word\": \"bom\",\n      \"created_at\": \"2024-01-15T10:30:00Z\",\n      \"updated_at\": \"2024-01-15T10:30:00Z\"\n    },\n    {\n      \"id\": 2,\n      \"word\": \"excelente\",\n      \"created_at\": \"2024-01-15T10:30:00Z\",\n      \"updated_at\": \"2024-01-15T10:30:00Z\"\n    }\n  ],\n  \"total\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Keyword",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"word\": \"fantástico\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/keywords",
+              "host": ["{{base_url}}"],
+              "path": ["api", "keywords"]
+            },
+            "description": "Create a new keyword for comment classification"
+          },
+          "response": [
+            {
+              "name": "Created Keyword",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"fantástico\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/keywords",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "keywords"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"keyword\": {\n    \"id\": 3,\n    \"word\": \"fantástico\",\n    \"created_at\": \"2024-01-15T11:00:00Z\",\n    \"updated_at\": \"2024-01-15T11:00:00Z\"\n  },\n  \"message\": \"Keyword created successfully. Metrics recalculation triggered.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Keyword",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"word\": \"incrível\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/keywords/3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "keywords", "3"]
+            },
+            "description": "Update an existing keyword"
+          },
+          "response": [
+            {
+              "name": "Updated Keyword",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"incrível\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/keywords/3",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "keywords", "3"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"keyword\": {\n    \"id\": 3,\n    \"word\": \"incrível\",\n    \"created_at\": \"2024-01-15T11:00:00Z\",\n    \"updated_at\": \"2024-01-15T11:15:00Z\"\n  },\n  \"message\": \"Keyword updated successfully. Metrics recalculation triggered.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Keyword",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/keywords/3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "keywords", "3"]
+            },
+            "description": "Delete a keyword"
+          },
+          "response": [
+            {
+              "name": "Deleted Keyword",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/keywords/3",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "keywords", "3"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Keyword deleted successfully. Metrics recalculation triggered.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Scenarios",
+      "item": [
+        {
+          "name": "Complete Analysis Flow",
+          "item": [
+            {
+              "name": "1. Start Analysis for Bret",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has job_id', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response).to.have.property('job_id');",
+                      "    pm.collectionVariables.set('job_id', response.job_id);",
+                      "});",
+                      "",
+                      "pm.test('Status is started', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.status).to.eql('started');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"Bret\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/comments/analyze",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "analyze"]
+                }
+              }
+            },
+            {
+              "name": "2. Check Progress",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has progress info', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response).to.have.property('status');",
+                      "    pm.expect(response).to.have.property('progress');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/comments/progress/{{job_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "progress", "{{job_id}}"]
+                }
+              }
+            },
+            {
+              "name": "3. Wait and Check Metrics",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "// Wait 5 seconds before checking metrics",
+                      "setTimeout(function(){}, 5000);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has user and group metrics', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response).to.have.property('user_metrics');",
+                      "    pm.expect(response).to.have.property('group_metrics');",
+                      "});",
+                      "",
+                      "pm.test('User metrics have statistics', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.user_metrics).to.have.property('statistics');",
+                      "    pm.expect(response.user_metrics.statistics).to.have.property('mean');",
+                      "    pm.expect(response.user_metrics.statistics).to.have.property('median');",
+                      "    pm.expect(response.user_metrics.statistics).to.have.property('standard_deviation');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/comments/metrics/Bret",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "metrics", "Bret"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error Scenarios",
+          "item": [
+            {
+              "name": "Invalid Username",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 400 or 422', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                      "});",
+                      "",
+                      "pm.test('Response has error message', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response).to.have.property('error');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/comments/analyze",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "analyze"]
+                }
+              }
+            },
+            {
+              "name": "Invalid Job ID",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 404', function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test('Response has error message', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response).to.have.property('error');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/comments/progress/invalid-job-id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "comments", "progress", "invalid-job-id"]
+                }
+              }
+            },
+            {
+              "name": "Duplicate Keyword",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 422', function () {",
+                      "    pm.response.to.have.status(422);",
+                      "});",
+                      "",
+                      "pm.test('Response has validation error', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response).to.have.property('error');",
+                      "    pm.expect(response.error).to.include('already exists');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"word\": \"bom\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/keywords",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "keywords"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Making request to: ' + pm.request.url);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});"
+        ]
+      }
+    }
+  ]
+}

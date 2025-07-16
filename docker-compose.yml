@@ -1,48 +1,46 @@
-version: '3.8'
+version: "3.8"
 
 services:
+  worker:
+    build: .
+    command: bin/rails solid_queue:start
+    env_file:
+      - ".env"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/rails
+      - bundle_cache:/usr/local/bundle
   db:
-    image: postgres:14
+    image: postgres:15
     environment:
-      POSTGRES_DB: comment_analysis_development
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5544:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6380:6379"
-
-  web:
+  app:
     build: .
     ports:
       - "3000:3000"
-    depends_on:
-      - db
-      - redis
-    environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/comment_analysis_development
-      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - ".env"
     volumes:
-      - .:/app
+      - .:/rails
+      - bundle_cache:/usr/local/bundle
+    depends_on:
+      db:
+        condition: service_healthy
     stdin_open: true
     tty: true
 
-  sidekiq:
-    build: .
-    command: bundle exec sidekiq
-    depends_on:
-      - db
-      - redis
-    environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/comment_analysis_development
-      REDIS_URL: redis://redis:6379/0
-    volumes:
-      - .:/app
-
 volumes:
   postgres_data:
+  bundle_cache:

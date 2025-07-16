@@ -1,0 +1,33 @@
+---
+http_interactions:
+  - request:
+      method: get
+      uri: https://jsonplaceholder.typicode.com/users?username=testuser
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+    response:
+      status:
+        code: 500
+        message: Internal Server Error
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:00 GMT
+        Content-Type:
+          - text/html
+        Content-Length:
+          - "21"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: Internal Server Error
+      recorded_at: Tue, 15 Jan 2025 10:00:00 GMT
+recorded_with: VCR 6.3.1

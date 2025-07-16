@@ -1,122 +1,243 @@
+# This file is auto-generated from the current state of the database. Instead
+# of editing this file, please use the migrations feature of Active Record to
+# incrementally modify your database, and then regenerate this schema definition.
+#
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
+#
+# It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_15_210519) do
-  enable_extension "pg_catalog.plpgsql"
-
-  create_table "analysis_jobs", force: :cascade do |t|
-    t.string "job_type", null: false
-    t.string "status", default: "pending", null: false
-    t.jsonb "metadata", default: {}
-    t.integer "total_items", default: 0
-    t.integer "processed_items", default: 0
-    t.float "progress_percentage", default: 0.0
-    t.datetime "started_at"
-    t.datetime "completed_at"
-    t.text "error_message"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["job_type"], name: "index_analysis_jobs_on_job_type"
-    t.index ["metadata"], name: "index_analysis_jobs_on_metadata", using: :gin
-    t.index ["status"], name: "index_analysis_jobs_on_status"
-  end
+ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
 
   create_table "comments", force: :cascade do |t|
-    t.bigint "post_id", null: false
-    t.bigint "user_id", null: false
     t.string "name"
     t.string "email"
-    t.text "body", null: false
+    t.text "body"
     t.text "translated_body"
-    t.integer "external_id", null: false
-    t.string "status", default: "pending"
-    t.datetime "processed"
-    t.integer "keyword_matches_count", default: 0
+    t.string "external_id"
+    t.string "status", default: "new"
+    t.integer "keyword_count", default: 0
+    t.bigint "post_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_comments_on_external_id", unique: true
-    t.index ["keyword_matches_count"], name: "index_comments_on_keyword_matches_count"
     t.index ["post_id"], name: "index_comments_on_post_id"
-    t.index ["processed"], name: "index_comments_on_processed"
     t.index ["status"], name: "index_comments_on_status"
-    t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
   create_table "group_metrics", force: :cascade do |t|
-    t.jsonb "data", default: {}
+    t.integer "total_users", default: 0
+    t.integer "total_comments", default: 0
+    t.integer "approved_comments", default: 0
+    t.integer "rejected_comments", default: 0
+    t.decimal "avg_keyword_count", precision: 8, scale: 2, default: "0.0"
+    t.decimal "median_keyword_count", precision: 8, scale: 2, default: "0.0"
+    t.decimal "std_dev_keyword_count", precision: 8, scale: 2, default: "0.0"
+    t.datetime "calculated_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "job_trackers", force: :cascade do |t|
+    t.string "job_id"
+    t.integer "status", default: 0
+    t.integer "progress", default: 0
+    t.integer "total", default: 0
+    t.text "error_message"
+    t.json "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_id"], name: "index_job_trackers_on_job_id", unique: true
+    t.index ["status"], name: "index_job_trackers_on_status"
   end
 
   create_table "keywords", force: :cascade do |t|
-    t.string "word", null: false
-    t.boolean "active", default: true
-    t.text "description"
+    t.string "word"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["active"], name: "index_keywords_on_active"
-    t.index ["word"], name: "index_keywords_on_word", unique: true
+    t.index "lower((word)::text)", name: "index_keywords_on_LOWER_word", unique: true
   end
 
   create_table "posts", force: :cascade do |t|
+    t.string "title"
+    t.text "body"
+    t.string "external_id"
     t.bigint "user_id", null: false
-    t.string "title", null: false
-    t.text "body", null: false
-    t.integer "external_id", null: false
-    t.integer "comments_count", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_posts_on_external_id", unique: true
     t.index ["user_id"], name: "index_posts_on_user_id"
   end
 
-  create_table "processing_jobs", force: :cascade do |t|
-    t.string "job_type", null: false
-    t.integer "status"
-    t.text "progress_info"
-    t.text "error_message"
-    t.integer "total_items", default: 0
-    t.integer "processed_items", default: 0
-    t.datetime "started_at"
-    t.datetime "completed_at"
+  create_table "solid_cache_entries", force: :cascade do |t|
+    t.binary "key", null: false
+    t.binary "value", null: false
+    t.datetime "created_at", null: false
+    t.bigint "key_hash", null: false
+    t.integer "byte_size", null: false
+    t.index ["byte_size"], name: "index_solid_cache_entries_on_byte_size"
+    t.index ["key_hash", "byte_size"], name: "index_solid_cache_entries_on_key_hash_and_byte_size"
+    t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
+  end
+
+  create_table "solid_queue_blocked_executions", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.string "queue_name", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "concurrency_key", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.index ["concurrency_key", "priority", "job_id"], name: "index_solid_queue_blocked_executions_for_release"
+    t.index ["expires_at", "concurrency_key"], name: "index_solid_queue_blocked_executions_for_maintenance"
+    t.index ["job_id"], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
+  end
+
+  create_table "solid_queue_claimed_executions", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.bigint "process_id"
+    t.datetime "created_at", null: false
+    t.index ["job_id"], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
+    t.index ["process_id", "job_id"], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
+  end
+
+  create_table "solid_queue_failed_executions", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.text "error"
+    t.datetime "created_at", null: false
+    t.index ["job_id"], name: "index_solid_queue_failed_executions_on_job_id", unique: true
+  end
+
+  create_table "solid_queue_jobs", force: :cascade do |t|
+    t.string "queue_name", null: false
+    t.string "class_name", null: false
+    t.text "arguments"
+    t.integer "priority", default: 0, null: false
+    t.string "active_job_id"
+    t.datetime "scheduled_at"
+    t.datetime "finished_at"
+    t.string "concurrency_key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["created_at"], name: "index_processing_jobs_on_created_at"
-    t.index ["job_type"], name: "index_processing_jobs_on_job_type"
-    t.index ["status"], name: "index_processing_jobs_on_status"
+    t.index ["active_job_id"], name: "index_solid_queue_jobs_on_active_job_id"
+    t.index ["class_name"], name: "index_solid_queue_jobs_on_class_name"
+    t.index ["finished_at"], name: "index_solid_queue_jobs_on_finished_at"
+    t.index ["queue_name", "finished_at"], name: "index_solid_queue_jobs_for_filtering"
+    t.index ["scheduled_at", "finished_at"], name: "index_solid_queue_jobs_for_alerting"
+  end
+
+  create_table "solid_queue_pauses", force: :cascade do |t|
+    t.string "queue_name", null: false
+    t.datetime "created_at", null: false
+    t.index ["queue_name"], name: "index_solid_queue_pauses_on_queue_name", unique: true
+  end
+
+  create_table "solid_queue_processes", force: :cascade do |t|
+    t.string "kind", null: false
+    t.datetime "last_heartbeat_at", null: false
+    t.bigint "supervisor_id"
+    t.integer "pid", null: false
+    t.string "hostname"
+    t.text "metadata"
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.index ["last_heartbeat_at"], name: "index_solid_queue_processes_on_last_heartbeat_at"
+    t.index ["name", "supervisor_id"], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
+    t.index ["supervisor_id"], name: "index_solid_queue_processes_on_supervisor_id"
+  end
+
+  create_table "solid_queue_ready_executions", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.string "queue_name", null: false
+    t.integer "priority", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.index ["job_id"], name: "index_solid_queue_ready_executions_on_job_id", unique: true
+    t.index ["priority", "job_id"], name: "index_solid_queue_poll_all"
+    t.index ["queue_name", "priority", "job_id"], name: "index_solid_queue_poll_by_queue"
+  end
+
+  create_table "solid_queue_recurring_executions", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.string "task_key", null: false
+    t.datetime "run_at", null: false
+    t.datetime "created_at", null: false
+    t.index ["job_id"], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
+    t.index ["task_key", "run_at"], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
+  end
+
+  create_table "solid_queue_recurring_tasks", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "schedule", null: false
+    t.string "command", limit: 2048
+    t.string "class_name"
+    t.text "arguments"
+    t.string "queue_name"
+    t.integer "priority", default: 0
+    t.boolean "static", default: true, null: false
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_solid_queue_recurring_tasks_on_key", unique: true
+    t.index ["static"], name: "index_solid_queue_recurring_tasks_on_static"
+  end
+
+  create_table "solid_queue_scheduled_executions", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.string "queue_name", null: false
+    t.integer "priority", default: 0, null: false
+    t.datetime "scheduled_at", null: false
+    t.datetime "created_at", null: false
+    t.index ["job_id"], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
+    t.index ["scheduled_at", "priority", "job_id"], name: "index_solid_queue_dispatch_all"
+  end
+
+  create_table "solid_queue_semaphores", force: :cascade do |t|
+    t.string "key", null: false
+    t.integer "value", default: 1, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
+    t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
+    t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
   create_table "user_metrics", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.string "metric_type", null: false
-    t.float "value", null: false
+    t.integer "total_comments", default: 0
+    t.integer "approved_comments", default: 0
+    t.integer "rejected_comments", default: 0
+    t.decimal "avg_keyword_count", precision: 8, scale: 2, default: "0.0"
+    t.decimal "median_keyword_count", precision: 8, scale: 2, default: "0.0"
+    t.decimal "std_dev_keyword_count", precision: 8, scale: 2, default: "0.0"
+    t.datetime "calculated_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_user_metrics_on_user_id"
+    t.index ["user_id"], name: "index_user_metrics_on_user_id_unique", unique: true
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "username", null: false
     t.string "name"
     t.string "email"
-    t.integer "external_id", null: false
-    t.text "address"
-    t.text "phone"
-    t.text "website"
-    t.text "company"
-    t.datetime "processed"
-    t.integer "approved_comments_count", default: 0
-    t.integer "rejected_comments_count", default: 0
-    t.integer "comments_count", default: 0
-    t.jsonb "analysis_metrics", default: {}
+    t.string "external_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["analysis_metrics"], name: "index_users_on_analysis_metrics", using: :gin
+    t.string "username"
     t.index ["external_id"], name: "index_users_on_external_id", unique: true
-    t.index ["processed"], name: "index_users_on_processed"
-    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   add_foreign_key "comments", "posts"
-  add_foreign_key "comments", "users"
   add_foreign_key "posts", "users"
+  add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "user_metrics", "users"
 end

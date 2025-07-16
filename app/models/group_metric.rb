@@ -1,2 +1,0 @@
-class GroupMetric < ApplicationRecord 
-end

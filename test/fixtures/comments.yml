@@ -1,15 +1,15 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
   post: one
-  body: MyText
+  name: "Test Comment One"
+  email: "commenter1@example.com"
+  body: "This is a test comment with some keywords"
   external_id: 1
-  name: MyString
-  email: MyString
+  status: "new"
 
 two:
-  post: two
-  body: MyText
-  external_id: 1
-  name: MyString
-  email: MyString
+  post: one
+  name: "Test Comment Two"
+  email: "commenter2@example.com"
+  body: "This is another test comment"
+  external_id: 2
+  status: "new"

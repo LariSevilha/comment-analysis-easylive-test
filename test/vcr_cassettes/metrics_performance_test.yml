@@ -1,0 +1,38 @@
+---
+http_interactions:
+  - request:
+      method: post
+      uri: <LIBRETRANSLATE_URL>/translate
+      body:
+        encoding: UTF-8
+        string: '{"q":"This comment contains important and relevant keywords that should be detected.","source":"en","target":"pt","api_key":"<LIBRETRANSLATE_API_KEY>"}'
+      headers:
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+        Accept:
+          - "*/*"
+        User-Agent:
+          - Ruby
+        Content-Type:
+          - application/json
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Date:
+          - Tue, 15 Jan 2025 10:00:00 GMT
+        Content-Type:
+          - application/json
+        Content-Length:
+          - "125"
+        Connection:
+          - keep-alive
+      body:
+        encoding: UTF-8
+        string: |
+          {
+            "translatedText": "Este comentário contém palavras-chave importantes e relevantes que devem ser detectadas."
+          }
+      recorded_at: Tue, 15 Jan 2025 10:00:00 GMT
+recorded_with: VCR 6.3.1
