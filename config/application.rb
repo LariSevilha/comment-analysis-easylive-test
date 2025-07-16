@@ -4,7 +4,7 @@ require "rails/all"
 
 Bundler.require(*Rails.groups)
 
-module CommentAnalysisApp
+module CommentAnalysis
   class Application < Rails::Application
     config.load_defaults 7.0
     
@@ -12,8 +12,8 @@ module CommentAnalysisApp
     config.api_only = true
     
     # Background jobs
-    config.active_job.queue_adapter = :sidekiq 
-
+    config.cache_store = :redis_cache_store, { url: ENV['REDIS_URL'] }
+    config.active_job.queue_adapter = :sidekiq
     
     # Cache store
     config.cache_store = :redis_cache_store, { url: ENV.fetch("REDIS_URL", "redis://localhost:6379/1") }

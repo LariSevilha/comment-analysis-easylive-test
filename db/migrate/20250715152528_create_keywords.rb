@@ -2,7 +2,9 @@ class CreateKeywords < ActiveRecord::Migration[7.0]
   def change
     create_table :keywords do |t|
       t.string :word, null: false
-      t.boolean :active, default: true 
+      t.boolean :active, default: true
+      t.text :description
+      
       t.timestamps
     end
     

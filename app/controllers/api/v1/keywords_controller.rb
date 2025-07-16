@@ -1,49 +1,46 @@
-class Api::V1::KeywordsController < ApplicationController
+class Api::V1::KeywordsController < Api::V1::BaseController
+  before_action :set_keyword, only: [:show, :update, :destroy]
+  
   def index
     keywords = Keyword.active.order(:word)
-    
-    render json: {
-      keywords: keywords.map { |k| { id: k.id, word: k.word } },
-      total: keywords.count
-    }
+    render_success(keywords.map(&:attributes))
+  end
+  
+  def show
+    render_success(@keyword.attributes)
   end
   
   def create
     keyword = Keyword.new(keyword_params)
     
     if keyword.save
-      render json: { 
-        message: "Keyword '#{keyword.word}' created successfully",
-        keyword: { id: keyword.id, word: keyword.word }
-      }, status: :created
+      render_success(keyword.attributes, 'Keyword created successfully')
     else
-      render json: { errors: keyword.errors.full_messages }, status: :unprocessable_entity
+      render_error(keyword.errors.full_messages.join(', '))
     end
   end
   
   def update
-    keyword = Keyword.find(params[:id])
-    
-    if keyword.update(keyword_params)
-      render json: { 
-        message: "Keyword updated successfully",
-        keyword: { id: keyword.id, word: keyword.word }
-      }
+    if @keyword.update(keyword_params)
+      render_success(@keyword.attributes, 'Keyword updated successfully')
     else
-      render json: { errors: keyword.errors.full_messages }, status: :unprocessable_entity
+      render_error(@keyword.errors.full_messages.join(', '))
     end
   end
   
   def destroy
-    keyword = Keyword.find(params[:id])
-    keyword.destroy
-    
-    render json: { message: "Keyword '#{keyword.word}' deleted successfully" }
+    @keyword.destroy
+    render_success(nil, 'Keyword deleted successfully')
   end
   
   private
   
+  def set_keyword
+    @keyword = Keyword.find(params[:id])
+  end
+  
+  
   def keyword_params
-    params.require(:keyword).permit(:word)
+    params.require(:keyword).permit(:word, :active)
   end
 end

@@ -1,41 +1,26 @@
 class User < ApplicationRecord
   has_many :posts, dependent: :destroy
   has_many :comments, through: :posts
+  has_many :user_metrics, dependent: :destroy
   
   validates :username, presence: true, uniqueness: true
+  validates :external_id, presence: true, uniqueness: true
   
-  scope :analyzed, -> { where.not(last_analyzed_at: nil) }
+  scope :processed, -> { where.not(processed: nil) }
   
-  def approval_rate
-    return 0 if total_comments.zero?
-    (approved_comments.to_f / total_comments * 100).round(2)
+  def recalculate_metrics!
+    UserMetricsJob.perform_later(id)
   end
   
-  def calculate_metrics!
-    user_comments = comments.where(status: ['aprovado', 'rejeitado'])
-    
-    if user_comments.any?
-      keyword_counts = user_comments.pluck(:matched_keywords_count)
-      
-      self.analysis_metrics = {
-        total_comments: user_comments.count,
-        approved_comments: user_comments.where(status: 'aprovado').count,
-        rejected_comments: user_comments.where(status: 'rejeitado').count,
-        approval_rate: approval_rate,
-        keywords_stats: {
-          mean: keyword_counts.mean.round(2),
-          median: keyword_counts.median.round(2),
-          standard_deviation: keyword_counts.standard_deviation.round(2),
-          variance: keyword_counts.variance.round(2),
-          min: keyword_counts.min,
-          max: keyword_counts.max
-        }
-      }
-    else
-      self.analysis_metrics = {}
-    end
-    
-    self.last_analyzed_at = Time.current
-    save!
+  def approved_comments_count
+    comments.approved.count
+  end
+  
+  def rejected_comments_count
+    comments.rejected.count
+  end
+  
+  def total_comments_count
+    comments.count
   end
 end

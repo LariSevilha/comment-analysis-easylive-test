@@ -1,31 +1,35 @@
 class TranslationService
-    include HTTParty
-    
-    base_uri 'https://libretranslate.de'
+    LIBRETRANSLATE_URL = ENV['LIBRETRANSLATE_URL'] || 'https://libretranslate.com/translate'
     
     def self.translate_to_portuguese(text)
       return text if text.blank?
-        cache_key = "translation:#{Digest::MD5.hexdigest(text)}"
-      
-      Rails.cache.fetch(cache_key, expires_in: 1.week) do
-        response = post('/translate', {
-          body: {
-            q: text,
-            source: 'en',
-            target: 'pt',
-            format: 'text'
-          }.to_json,
-          headers: { 'Content-Type' => 'application/json' }
-        })
-        
-        if response.success?
-          response.parsed_response['translatedText']
-        else 
-          text
-        end
-      end
-    rescue StandardError => e
+        response = simulate_translation(text)
+      response['translatedText'] || text
+    rescue => e
       Rails.logger.error "Translation failed: #{e.message}"
-      text 
+      text  
     end
-  nd
+    
+    private
+    
+    def self.simulate_translation(text)
+      {
+        'translatedText' => "#{text} (traduzido)"
+      }
+    end
+    
+    def self.call_libretranslate(text)
+      response = Faraday.post(LIBRETRANSLATE_URL) do |req|
+        req.headers['Content-Type'] = 'application/json'
+        req.body = {
+          q: text,
+          source: 'en',
+          target: 'pt',
+          format: 'text'
+        }.to_json
+      end
+      
+      JSON.parse(response.body)
+    end
+  end
+  

@@ -4,15 +4,21 @@ class CreateUsers < ActiveRecord::Migration[7.0]
       t.string :username, null: false
       t.string :name
       t.string :email
-      t.json :analysis_metrics, default: {}
-      t.datetime :last_analyzed_at
-      t.integer :total_comments, default: 0
-      t.integer :approved_comments, default: 0
-      t.integer :rejected_comments, default: 0
+      t.integer :external_id, null: false
+      t.text :address
+      t.text :phone
+      t.text :website
+      t.text :company
+      t.datetime :processed
+      t.integer :approved_comments_count, default: 0
+      t.integer :rejected_comments_count, default: 0
+      t.integer :total_comments_count, default: 0
       
       t.timestamps
     end
     
     add_index :users, :username, unique: true
+    add_index :users, :external_id, unique: true
+    add_index :users, :processed
   end
 end

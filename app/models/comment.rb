@@ -2,49 +2,60 @@ class Comment < ApplicationRecord
   include AASM
   
   belongs_to :post
+  has_one :user, through: :post
   
+  validates :body, presence: true
   validates :external_id, presence: true, uniqueness: true
   
+  counter_cache :post
+  
   aasm column: :status do
-    state :novo, initial: true
-    state :processando
-    state :aprovado
-    state :rejeitado
+    state :new, initial: true
+    state :processing
+    state :approved
+    state :rejected
     
     event :start_processing do
-      transitions from: :novo, to: :processando
+      transitions from: :new, to: :processing
     end
     
     event :approve do
-      transitions from: :processando, to: :aprovado
+      transitions from: :processing, to: :approved
+      after do
+        update_approval_metrics!
+      end
     end
     
     event :reject do
-      transitions from: :processando, to: :rejeitado
+      transitions from: :processing, to: :rejected
+      after do
+        update_rejection_metrics!
+      end
+    end
+    
+    event :reprocess do
+      transitions from: [:approved, :rejected], to: :processing
     end
   end
   
-  scope :processed, -> { where(status: ['aprovado', 'rejeitado']) }
-  scope :approved, -> { where(status: 'aprovado') }
-  scope :rejected, -> { where(status: 'rejeitado') }
+  scope :approved, -> { where(status: 'approved') }
+  scope :rejected, -> { where(status: 'rejected') }
+  scope :processed, -> { where(status: ['approved', 'rejected']) }
   
-  def analyze_keywords!
-    return unless translated_body.present?
-    
-    active_keywords = Keyword.active.pluck(:word).map(&:downcase)
-    translated_words = translated_body.downcase.split(/\W+/)
-    
-    matched = active_keywords.select { |keyword| translated_words.include?(keyword) }
-    
-    self.matched_keywords = matched
-    self.matched_keywords_count = matched.size
-    
-    if matched_keywords_count >= 2
-      approve!
-    else
-      reject!
-    end
-    
-    save!
+  def process_classification!
+    start_processing!
+    CommentProcessingJob.perform_later(id)
+  end
+  
+  private
+  
+  def update_approval_metrics!
+    user.recalculate_metrics!
+    GroupMetricsJob.perform_later
+  end
+  
+  def update_rejection_metrics!
+    user.recalculate_metrics!
+    GroupMetricsJob.perform_later
   end
 end
