@@ -59,8 +59,8 @@ Um sistema completo de análise de comentários que importa dados de usuários d
 
 ```bash
 # 1. Clone o repositório
-git clone <repository-url>
-cd comment-analysis-pipeline
+git clone git@github.com:LariSevilha/comment-analysis-easylive-test.git
+cd comment-analysis-easylive-test.git
 
 # 2. Instale as dependências
 bundle install
