@@ -4,6 +4,49 @@ API de análise de comentários construída com Rails 8, PostgreSQL e Redis, pre
 
 ---
 
+### Visão Geral do Sistema
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   API Client    │───▶│  Rails API       │───▶│  Background     │
+│                 │    │  Controllers     │    │  Jobs           │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │  Service Layer   │    │  External APIs  │
+                       │  - Import        │    │  - JSONPlace    │
+                       │  - Translation   │    │  - LibreTranslate│
+                       │  - Classification│    └─────────────────┘
+                       │  - Metrics       │              │
+                       └──────────────────┘              │
+                                │                        │
+                                ▼                        ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │  State Machine   │    │  Solid Cache    │
+                       │  (AASM)          │    │  (Database)     │
+                       └──────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌─────────────────────────────────────────┐
+                       │           PostgreSQL Database           │
+                       │  - Application Data                     │
+                       │  - Solid Queue (Background Jobs)       │
+                       │  - Solid Cache (Caching Layer)         │
+                       └─────────────────────────────────────────┘
+```
+
+### Fluxo de Processamento
+
+1. **Importação**: Busca usuário por username na JSONPlaceholder API
+2. **Recursão**: Importa posts do usuário e comentários de cada post
+3. **Estado**: Comentários iniciam no estado "new"
+4. **Tradução**: Background job traduz comentários para PT-BR
+5. **Classificação**: Analisa palavras-chave (≥2 = aprovado, <2 = rejeitado)
+6. **Métricas**: Calcula estatísticas por usuário e grupo
+7. **Cache**: Otimiza performance com Solid Cache
+
+
 ## ✅ Requisitos
 
 * Docker
