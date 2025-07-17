@@ -46,6 +46,11 @@ default_keywords.each do |word|
   end
 end
 
+sample_user = User.find_or_create_by(username: 'Bret') do |user|
+  user.name = 'Leanne Graham'
+  user.email = 'Sincere@april.biz'
+  user.external_id = 1 
+end
 # Restore original queue adapter
 ActiveJob::Base.queue_adapter = :solid_queue if Rails.env.development?
 

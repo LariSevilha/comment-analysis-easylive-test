@@ -7,7 +7,7 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module Larissa
+module CommentAnalyzer
   class Application < Rails::Application
     # Adiciona o middleware de tratamento de erros
     config.middleware.use ErrorHandlingMiddleware

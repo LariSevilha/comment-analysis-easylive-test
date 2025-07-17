@@ -13,32 +13,12 @@
 ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-# This file is auto-generated from the current state of the database. Instead
-# of editing this file, please use the migrations feature of Active Record to
-# incrementally modify your database, and then regenerate this schema definition.
-#
-# This file is the source Rails uses to define your schema when running `bin/rails
-# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
-# be faster and is potentially less error prone than running all of your
-# migrations from scratch. Old migrations may fail to apply correctly if those
-# migrations use external dependencies or application code.
-#
-# It's strongly recommended that you check this file into your version control system.
-
-ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
 
   create_table "comments", force: :cascade do |t|
     t.string "name"
     t.string "email"
     t.text "body"
-    t.text "body"
     t.text "translated_body"
-    t.string "external_id"
-    t.string "status", default: "new"
-    t.integer "keyword_count", default: 0
-    t.bigint "post_id", null: false
     t.string "external_id"
     t.string "status", default: "new"
     t.integer "keyword_count", default: 0
@@ -51,14 +31,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
   end
 
   create_table "group_metrics", force: :cascade do |t|
-    t.integer "total_users", default: 0
-    t.integer "total_comments", default: 0
-    t.integer "approved_comments", default: 0
-    t.integer "rejected_comments", default: 0
-    t.decimal "avg_keyword_count", precision: 8, scale: 2, default: "0.0"
-    t.decimal "median_keyword_count", precision: 8, scale: 2, default: "0.0"
-    t.decimal "std_dev_keyword_count", precision: 8, scale: 2, default: "0.0"
-    t.datetime "calculated_at"
     t.integer "total_users", default: 0
     t.integer "total_comments", default: 0
     t.integer "approved_comments", default: 0
@@ -122,13 +94,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
     t.decimal "median_keyword_count", precision: 8, scale: 2, default: "0.0"
     t.decimal "std_dev_keyword_count", precision: 8, scale: 2, default: "0.0"
     t.datetime "calculated_at"
-    t.integer "total_comments", default: 0
-    t.integer "approved_comments", default: 0
-    t.integer "rejected_comments", default: 0
-    t.decimal "avg_keyword_count", precision: 8, scale: 2, default: "0.0"
-    t.decimal "median_keyword_count", precision: 8, scale: 2, default: "0.0"
-    t.decimal "std_dev_keyword_count", precision: 8, scale: 2, default: "0.0"
-    t.datetime "calculated_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_user_metrics_on_user_id"
@@ -147,11 +112,5 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
 
   add_foreign_key "comments", "posts"
   add_foreign_key "posts", "users"
-  add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "user_metrics", "users"
 end
