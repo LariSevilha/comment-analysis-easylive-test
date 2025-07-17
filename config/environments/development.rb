@@ -9,6 +9,12 @@ Rails.application.configure do
   # In the development environment your application's code is reloaded any time
   # it changes. This slows down response time but is perfect for development
   # since you don't have to restart the web server when you make code changes.
+  config.logger = ActiveSupport::Logger.new(STDOUT)
+    .tap  { |logger| logger.formatter = StructuredLogFormatter.new }
+    .then { |logger| ActiveSupport::TaggedLogging.new(logger) }
+  # In the development environment your application's code is reloaded any time
+  # it changes. This slows down response time but is perfect for development
+  # since you don't have to restart the web server when you make code changes.
   config.enable_reloading = true
 
   # Do not eager load code on boot.
@@ -18,8 +24,11 @@ Rails.application.configure do
   config.consider_all_requests_local = true
 
   # Enable server timing
+  # Enable server timing
   config.server_timing = true
 
+  # Enable/disable caching. By default caching is disabled.
+  # Run rails dev:cache to toggle caching.
   # Enable/disable caching. By default caching is disabled.
   # Run rails dev:cache to toggle caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?
@@ -27,8 +36,14 @@ Rails.application.configure do
     config.public_file_server.headers = {
       "Cache-Control" => "public, max-age=#{2.days.to_i}"
     }
+    config.cache_store = :solid_cache_store
+    config.public_file_server.headers = {
+      "Cache-Control" => "public, max-age=#{2.days.to_i}"
+    }
   else
     config.action_controller.perform_caching = false
+
+    config.cache_store = :null_store
 
     config.cache_store = :null_store
   end
@@ -50,6 +65,12 @@ Rails.application.configure do
   # Tell Active Support which deprecation messages to disallow.
   config.active_support.disallowed_deprecation_warnings = []
 
+  # Raise exceptions for disallowed deprecations.
+  config.active_support.disallowed_deprecation = :raise
+
+  # Tell Active Support which deprecation messages to disallow.
+  config.active_support.disallowed_deprecation_warnings = []
+
   # Raise an error on page load if there are pending migrations.
   config.active_record.migration_error = :page_load
 
@@ -60,8 +81,9 @@ Rails.application.configure do
   config.active_job.verbose_enqueue_logs = true
 
   # Use Solid Queue for background jobs in development
-  config.active_job.queue_adapter = :solid_queue
+  # config.active_job.queue_adapter = :solid_queue
 
+  config.active_job.queue_adapter = :async
 
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true

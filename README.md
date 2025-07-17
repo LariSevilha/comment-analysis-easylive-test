@@ -1,4 +1,5 @@
 # Comment Analysis Pipeline
+# Comment Analysis Pipeline
 
 Um sistema completo de análise de comentários que importa dados de usuários da JSONPlaceholder API, processa comentários através de uma máquina de estados, traduz conteúdo para português brasileiro, classifica comentários baseado em palavras-chave configuráveis, e calcula métricas estatísticas tanto por usuário quanto por grupo.
 
@@ -59,8 +60,8 @@ Um sistema completo de análise de comentários que importa dados de usuários d
 
 ```bash
 # 1. Clone o repositório
-git clone git@github.com:LariSevilha/comment-analysis-easylive-test.git
-cd comment-analysis-easylive-test.git
+git clone <repository-url>
+cd comment-analysis-pipeline
 
 # 2. Instale as dependências
 bundle install
@@ -89,8 +90,8 @@ bundle exec solid_queue:start
 
 ```bash
 # 1. Clone o repositório
-git https://github.com/LariSevilha/comment-analysis-easylive-test
-cd comment-analysis-easylive-test
+git clone <repository-url>
+cd comment-analysis-pipeline
 
 # 2. Configure variáveis de ambiente
 cp .env.example .env
@@ -481,6 +482,3 @@ rails logs:api_calls
 4. Push para a branch (`git push origin feature/nova-feature`)
 5. Abra um Pull Request
 
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
