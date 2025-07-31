@@ -1,5 +1,9 @@
 class JobTracker < ApplicationRecord
   validates :job_id, presence: true, uniqueness: true
+  validates :job_type, presence: true
+  validates :status, presence: true
+  validates :progress, numericality: { greater_than_or_equal_to: 0 }
+  validates :total, numericality: { greater_than_or_equal_to: 0 }
 
   enum status: { pending: 0, processing: 1, completed: 2, failed: 3 }
 

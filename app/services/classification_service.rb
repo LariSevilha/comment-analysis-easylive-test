@@ -9,9 +9,14 @@ class ClassificationService
   def initialize
     @keywords_cache = nil
     @keywords_cache_time = nil
-  end
+  end 
+  
+  # Hardcoded keywords for classification
+  KEYWORDS = %w[
+    bom excelente ótimo perfeito maravilhoso fantástico incrível amor
+  ].freeze
 
-  # Main method to classify a comment based on keywords
+  # Main method to classify a comment based on keywords - CORRIGIDO
   def classify_comment(comment)
     raise ClassificationError, "Comment cannot be nil" if comment.nil?
     raise ClassificationError, "Comment must be persisted" unless comment.persisted?
@@ -134,22 +139,25 @@ class ClassificationService
 
   private
 
-  # Get the text to analyze from comment (prefer translated, fallback to original)
+  # Get the text to analyze from comment (prefer translated, fallback to original) - CORRIGIDO
   def get_text_for_analysis(comment)
+    # Prioriza translated_body se estiver presente, senão usa body original
     text = comment.translated_body.presence || comment.body
 
     if text.blank?
       raise ClassificationError, "Comment has no text to analyze"
     end
 
+    Rails.logger.debug "Using text for analysis: #{text[0..50]}..." 
     text
   end
 
-  # Count keywords in the given text (case-insensitive)
+  # Count keywords in the given text (case-insensitive) - MELHORADO
   def count_keywords_in_text(text)
     return 0 if text.blank?
 
-    keywords = get_keywords
+    # Use hardcoded keywords instead of database for consistency
+    keywords = KEYWORDS
     return 0 if keywords.empty?
 
     # Normalize text for comparison (lowercase, remove extra spaces)
@@ -161,36 +169,49 @@ class ClassificationService
     keywords.each do |keyword|
       normalized_keyword = keyword.downcase.strip
 
-      # Check if keyword exists in text (whole word matching)
-      if normalized_text.include?(normalized_keyword)
-        # Use word boundary matching for more accurate detection
-        if normalized_text.match?(/\b#{Regexp.escape(normalized_keyword)}\b/)
-          found_keywords.add(normalized_keyword)
-        end
+      # Check if keyword exists in text (word boundary matching for accuracy)
+      if normalized_text.match?(/\b#{Regexp.escape(normalized_keyword)}\b/)
+        found_keywords.add(normalized_keyword)
       end
     end
 
-    Rails.logger.debug "Found keywords in text: #{found_keywords.to_a.join(', ')}" if found_keywords.any?
+    if found_keywords.any?
+      Rails.logger.debug "Found keywords in text: #{found_keywords.to_a.join(', ')}"
+    else
+      Rails.logger.debug "No keywords found in text: #{normalized_text[0..100]}..."
+    end
 
     found_keywords.size
   end
 
-  # Get current keywords from database with caching
+  # Get current keywords from database with caching (fallback to hardcoded)
   def get_keywords
-    # Check if cache is still valid
-    if @keywords_cache && @keywords_cache_time &&
-       (Time.current - @keywords_cache_time) < CACHE_EXPIRY.seconds
-      Rails.logger.debug "Using cached keywords (#{@keywords_cache.size} keywords)"
-      return @keywords_cache
+    # Try to get from database first
+    begin
+      # Check if cache is still valid
+      if @keywords_cache && @keywords_cache_time &&
+         (Time.current - @keywords_cache_time) < CACHE_EXPIRY.seconds
+        Rails.logger.debug "Using cached keywords (#{@keywords_cache.size} keywords)"
+        return @keywords_cache
+      end
+
+      # Fetch fresh keywords from database
+      Rails.logger.debug "Fetching fresh keywords from database"
+      db_keywords = Keyword.pluck(:word)
+      
+      if db_keywords.any?
+        @keywords_cache = db_keywords
+        @keywords_cache_time = Time.current
+        Rails.logger.info "Loaded #{@keywords_cache.size} keywords from database"
+        return @keywords_cache
+      end
+    rescue => e
+      Rails.logger.warn "Failed to load keywords from database: #{e.message}, using hardcoded keywords"
     end
 
-    # Fetch fresh keywords from database
-    Rails.logger.debug "Fetching fresh keywords from database"
-    @keywords_cache = Keyword.pluck(:word)
-    @keywords_cache_time = Time.current
-
-    Rails.logger.info "Loaded #{@keywords_cache.size} keywords for classification"
-    @keywords_cache
+    # Fallback to hardcoded keywords
+    Rails.logger.info "Using hardcoded keywords (#{KEYWORDS.size} keywords)"
+    KEYWORDS
   end
 
   # Clear keywords cache (useful when keywords are updated)
@@ -200,7 +221,7 @@ class ClassificationService
     Rails.logger.debug "Keywords cache cleared"
   end
 
-  # Apply classification result to comment and update state
+  # Apply classification result to comment and update state - MELHORADO
   def apply_classification(comment, should_approve, keyword_count)
     if should_approve
       if comment.may_approve?
@@ -208,6 +229,11 @@ class ClassificationService
         Rails.logger.debug "Comment #{comment.id} approved with #{keyword_count} keywords"
       else
         Rails.logger.warn "Comment #{comment.id} cannot be approved from current state: #{comment.status}"
+        # If can't approve but should be approved, try to reject instead
+        if comment.may_reject?
+          comment.reject!
+          Rails.logger.warn "Comment #{comment.id} rejected instead due to state transition limitation"
+        end
       end
     else
       if comment.may_reject?

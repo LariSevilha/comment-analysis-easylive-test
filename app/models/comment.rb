@@ -5,7 +5,7 @@ class Comment < ApplicationRecord
   has_one :user, through: :post
 
   validates :name, presence: true
-  validates :email, presence: true
+  # validates :email, presence: true
   validates :body, presence: true
   validates :external_id, presence: true, uniqueness: true
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_31_191243) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -25,9 +25,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
     t.bigint "post_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["external_id"], name: "index_comments_on_external_id", unique: true
     t.index ["post_id"], name: "index_comments_on_post_id"
-    t.index ["status"], name: "index_comments_on_status"
   end
 
   create_table "group_metrics", force: :cascade do |t|
@@ -52,6 +50,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
     t.json "metadata"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_type"
     t.index ["job_id"], name: "index_job_trackers_on_job_id", unique: true
     t.index ["status"], name: "index_job_trackers_on_status"
   end
@@ -66,11 +65,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
   create_table "posts", force: :cascade do |t|
     t.string "title"
     t.text "body"
+    t.integer "user_id"
     t.string "external_id"
-    t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["external_id"], name: "index_posts_on_external_id", unique: true
     t.index ["user_id"], name: "index_posts_on_user_id"
   end
 
@@ -111,6 +109,5 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_16_180901) do
   end
 
   add_foreign_key "comments", "posts"
-  add_foreign_key "posts", "users"
   add_foreign_key "user_metrics", "users"
 end

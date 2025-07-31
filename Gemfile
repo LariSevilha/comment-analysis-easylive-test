@@ -60,6 +60,7 @@ group :development, :test do
   # WebMock for stubbing HTTP requests
   gem "webmock"
   # Factory Bot for test data generation
+  gem 'rspec-rails'
   gem "factory_bot_rails"
   # Performance testing
   gem "benchmark-ips"

@@ -11,8 +11,8 @@ class TranslationJob < ApplicationJob
     Rails.logger.error "TranslationJob discarded - Deserialization error: #{error.message}"
   end
 
-  def perform(comment_id, job_tracker_id, comment_index = nil, total_comments = nil)
-    Rails.logger.info "Starting TranslationJob for comment: #{comment_id}, job_tracker: #{job_tracker_id}"
+  def perform(comment_id, job_tracker_id, comment_index = nil, total_comments = nil, source_language: 'en')
+    Rails.logger.info "Starting TranslationJob for comment: #{comment_id}, job_tracker: #{job_tracker_id}, source_language: #{source_language}"
 
     # Find the comment and job tracker
     comment = Comment.find(comment_id)
@@ -31,16 +31,21 @@ class TranslationJob < ApplicationJob
       translation_service = TranslationService.new
       classification_service = ClassificationService.new
 
-      # Translate the comment body
+      # ETAPA 1: Traduzir o comentário
       Rails.logger.debug "Translating comment #{comment_id}: #{comment.body[0..50]}..."
-      translated_text = translation_service.translate_to_portuguese(comment.body)
+      
+      translated_text = translation_service.translate(
+        comment.body, 
+        from: source_language, 
+        to: 'pt'
+      )
 
-      # Update comment with translated text
+      # CRITICAL: Update comment with translated text BEFORE classification
       comment.update!(translated_body: translated_text)
-      Rails.logger.debug "Translation completed for comment #{comment_id}"
+      Rails.logger.debug "Translation completed and saved for comment #{comment_id}: #{translated_text[0..50]}..."
 
-      # Classify the comment based on keywords
-      Rails.logger.debug "Classifying comment #{comment_id}"
+      # ETAPA 2: Classificar o comentário (agora com translated_body populado)
+      Rails.logger.debug "Classifying comment #{comment_id} with translated text"
       classification_result = classification_service.classify_comment(comment)
 
       Rails.logger.info "Comment #{comment_id} processed: #{classification_result[:approved] ? 'approved' : 'rejected'} (#{classification_result[:keyword_count]} keywords)"
@@ -64,6 +69,7 @@ class TranslationJob < ApplicationJob
 
       # If translation fails, we still try to classify with original text
       begin
+        Rails.logger.warn "Translation failed, attempting classification with original text"
         classification_service = ClassificationService.new
         classification_result = classification_service.classify_comment(comment)
         Rails.logger.info "Comment #{comment_id} classified with original text: #{classification_result[:approved] ? 'approved' : 'rejected'}"
@@ -84,14 +90,18 @@ class TranslationJob < ApplicationJob
       raise # Re-raise to trigger retry logic
 
     rescue => e
-      # Only re-raise if it's not a translation error we already handled
-      unless e.is_a?(TranslationService::TranslationError)
-        Rails.logger.error "TranslationJob failed with unexpected error for comment #{comment_id}: #{e.message}"
+      # Handle unexpected errors
+      Rails.logger.error "TranslationJob failed with unexpected error for comment #{comment_id}: #{e.message}"
+      Rails.logger.error "Error backtrace: #{e.backtrace.first(5).join("\n")}"
 
-        # Reject the comment on unexpected errors
+      # Reject the comment on unexpected errors
+      begin
         comment.reject! if comment.may_reject?
-        raise # Re-raise to trigger retry logic
+      rescue => reject_error
+        Rails.logger.error "Failed to reject comment #{comment_id}: #{reject_error.message}"
       end
+      
+      raise # Re-raise to trigger retry logic
     end
   end
 
@@ -102,9 +112,9 @@ class TranslationJob < ApplicationJob
     import_progress = 50
     translation_progress = (comment_index.to_f / total_comments * 50).round
     total_progress = import_progress + translation_progress
-
-    job_tracker.update_progress([total_progress, job_tracker.total].min)
-
+  
+    job_tracker.update!(progress: [total_progress, job_tracker.total].min)
+  
     Rails.logger.debug "Translation progress updated: #{comment_index}/#{total_comments} comments (#{total_progress}/#{job_tracker.total})"
   rescue => e
     Rails.logger.error "Failed to update translation progress for job_tracker #{job_tracker.id}: #{e.message}"
